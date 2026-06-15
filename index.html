@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Music Typing Practice</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #0066ff, #003cb3);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app {
+      width: 95%;
+      max-width: 1100px;
+      text-align: center;
+      padding: 28px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 78px;
+      height: 78px;
+      object-fit: contain;
+      border-radius: 18px;
+      background: white;
+      padding: 8px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 42px;
+      letter-spacing: 1px;
+    }
+
+    .game-card {
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.85;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .target-area {
+      margin: 20px 0;
+      padding: 28px;
+      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.2);
+      min-height: 150px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .target-text {
+      font-size: 38px;
+      line-height: 1.45;
+      font-weight: bold;
+      word-break: break-word;
+    }
+
+    .typed {
+      color: #8cffc1;
+    }
+
+    .current {
+      color: #ffd966;
+      border-bottom: 4px solid #ffd966;
+    }
+
+    .remaining {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .wrong-flash {
+      animation: wrongFlash 0.25s ease;
+    }
+
+    @keyframes wrongFlash {
+      0% {
+        background: rgba(255, 0, 0, 0.4);
+        transform: translateX(0);
+      }
+      25% {
+        transform: translateX(-8px);
+      }
+      50% {
+        transform: translateX(8px);
+      }
+      75% {
+        transform: translateX(-5px);
+      }
+      100% {
+        background: rgba(0, 0, 0, 0.2);
+        transform: translateX(0);
+      }
+    }
+
+    .input-box {
+      width: 100%;
+      max-width: 800px;
+      font-size: 28px;
+      padding: 18px 22px;
+      border: none;
+      border-radius: 16px;
+      outline: none;
+      text-align: center;
+      margin-bottom: 18px;
+      color: #003b8f;
+      font-weight: bold;
+      background: white;
+      box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .input-box::placeholder {
+      color: #7c9ed6;
+      font-weight: normal;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 999px;
+      padding: 13px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #0040a8;
+      background: white;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.25);
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .keyboard {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      user-select: none;
+    }
+
+    .keyboard-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .key {
+      min-width: 48px;
+      height: 48px;
+      padding: 0 12px;
+      border-radius: 10px;
+      background: white;
+      color: #0040a8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 5px 0 #b8d3ff, 0 8px 14px rgba(0, 0, 0, 0.22);
+      transition: transform 0.08s ease, background 0.08s ease, box-shadow 0.08s ease;
+    }
+
+    .key.space {
+      min-width: 340px;
+    }
+
+    .key.pressed {
+      background: #ffd966;
+      color: #002f7a;
+      transform: translateY(5px);
+      box-shadow: 0 1px 0 #b8d3ff, 0 3px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .message {
+      margin-top: 18px;
+      font-size: 18px;
+      min-height: 28px;
+      font-weight: bold;
+    }
+
+    .success {
+      color: #8cffc1;
+    }
+
+    .warning {
+      color: #ffd966;
+    }
+
+    @media (max-width: 760px) {
+      h1 {
+        font-size: 30px;
+      }
+
+      .header {
+        flex-direction: column;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .target-text {
+        font-size: 28px;
+      }
+
+      .input-box {
+        font-size: 22px;
+      }
+
+      .key {
+        min-width: 31px;
+        height: 42px;
+        font-size: 14px;
+        padding: 0 7px;
+      }
+
+      .key.space {
+        min-width: 210px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="header">
+      <img class="logo" src="./logo.png" alt="Typing Practice Logo" id="logo" />
+      <h1>Music Typing Practice</h1>
+    </div>
+
+    <section class="game-card">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Score</div>
+          <div class="stat-value" id="score">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Mistakes</div>
+          <div class="stat-value" id="mistakes">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Accuracy</div>
+          <div class="stat-value" id="accuracy">100%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Phrase</div>
+          <div class="stat-value" id="phraseNumber">1</div>
+        </div>
+      </div>
+
+      <div class="target-area" id="targetArea">
+        <div class="target-text" id="targetText"></div>
+      </div>
+
+      <input
+        class="input-box"
+        id="typingInput"
+        type="text"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        placeholder="Click here and start typing"
+      />
+
+      <div class="buttons">
+        <button id="startButton">Start / Focus</button>
+        <button id="nextButton">Next Phrase</button>
+        <button id="resetButton">Reset Score</button>
+      </div>
+
+      <div class="keyboard" id="keyboard">
+        <div class="keyboard-row">
+          <div class="key" data-key="q">Q</div>
+          <div class="key" data-key="w">W</div>
+          <div class="key" data-key="e">E</div>
+          <div class="key" data-key="r">R</div>
+          <div class="key" data-key="t">T</div>
+          <div class="key" data-key="y">Y</div>
+          <div class="key" data-key="u">U</div>
+          <div class="key" data-key="i">I</div>
+          <div class="key" data-key="o">O</div>
+          <div class="key" data-key="p">P</div>
+        </div>
+        <div class="keyboard-row">
+          <div class="key" data-key="a">A</div>
+          <div class="key" data-key="s">S</div>
+          <div class="key" data-key="d">D</div>
+          <div class="key" data-key="f">F</div>
+          <div class="key" data-key="g">G</div>
+          <div class="key" data-key="h">H</div>
+          <div class="key" data-key="j">J</div>
+          <div class="key" data-key="k">K</div>
+          <div class="key" data-key="l">L</div>
+        </div>
+        <div class="keyboard-row">
+          <div class="key" data-key="z">Z</div>
+          <div class="key" data-key="x">X</div>
+          <div class="key" data-key="c">C</div>
+          <div class="key" data-key="v">V</div>
+          <div class="key" data-key="b">B</div>
+          <div class="key" data-key="n">N</div>
+          <div class="key" data-key="m">M</div>
+        </div>
+        <div class="keyboard-row">
+          <div class="key space" data-key=" ">SPACE</div>
+        </div>
+      </div>
+
+      <div class="message" id="message">Use your keyboard. If you type the wrong letter, wrong.wav will play.</div>
+    </section>
+  </main>
+
+  <audio id="wrongSound" src="./wrong.wav" preload="auto"></audio>
+
+  <script>
+    const phrases = [
+      "love dream tonight",
+      "dancing in the moonlight",
+      "rock and roll forever",
+      "sweet melody",
+      "golden music",
+      "sing with your heart",
+      "bright city lights",
+      "summer love song",
+      "beautiful rhythm",
+      "party all night",
+      "never stop the music",
+      "feel the beat",
+      "blue sky melody",
+      "happy radio",
+      "electric guitar",
+      "classic pop song",
+      "soul and rhythm",
+      "music makes me smile",
+      "dreams and memories",
+      "dance floor magic",
+      "young wild and free",
+      "shine like a star",
+      "heartbreak song",
+      "country road",
+      "smooth jazz night",
+      "beautiful voice",
+      "simple love story",
+      "midnight music",
+      "new world sound",
+      "sing it again"
+    ];
+
+    const targetText = document.getElementById("targetText");
+    const targetArea = document.getElementById("targetArea");
+    const typingInput = document.getElementById("typingInput");
+    const wrongSound = document.getElementById("wrongSound");
+    const scoreElement = document.getElementById("score");
+    const mistakesElement = document.getElementById("mistakes");
+    const accuracyElement = document.getElementById("accuracy");
+    const phraseNumberElement = document.getElementById("phraseNumber");
+    const message = document.getElementById("message");
+    const startButton = document.getElementById("startButton");
+    const nextButton = document.getElementById("nextButton");
+    const resetButton = document.getElementById("resetButton");
+    const logo = document.getElementById("logo");
+
+    let currentPhrase = "";
+    let currentIndex = 0;
+    let score = 0;
+    let mistakes = 0;
+    let typedCount = 0;
+    let phraseCount = 1;
+    let usedIndexes = [];
+
+    logo.addEventListener("error", function () {
+      logo.style.display = "none";
+    });
+
+    function choosePhrase() {
+      if (usedIndexes.length === phrases.length) {
+        usedIndexes = [];
+      }
+
+      let randomIndex = Math.floor(Math.random() * phrases.length);
+
+      while (usedIndexes.includes(randomIndex)) {
+        randomIndex = Math.floor(Math.random() * phrases.length);
+      }
+
+      usedIndexes.push(randomIndex);
+      currentPhrase = phrases[randomIndex];
+      currentIndex = 0;
+      typingInput.value = "";
+      phraseNumberElement.textContent = phraseCount;
+      renderTarget();
+    }
+
+    function renderTarget() {
+      let html = "";
+
+      for (let i = 0; i < currentPhrase.length; i++) {
+        const character = escapeHtml(currentPhrase[i]);
+
+        if (i < currentIndex) {
+          html += '<span class="typed">' + character + "</span>";
+        } else if (i === currentIndex) {
+          html += '<span class="current">' + character + "</span>";
+        } else {
+          html += '<span class="remaining">' + character + "</span>";
+        }
+      }
+
+      targetText.innerHTML = html;
+    }
+
+    function escapeHtml(character) {
+      if (character === "&") {
+        return "&amp;";
+      }
+
+      if (character === "<") {
+        return "&lt;";
+      }
+
+      if (character === ">") {
+        return "&gt;";
+      }
+
+      if (character === " ") {
+        return "&nbsp;";
+      }
+
+      return character;
+    }
+
+    function playWrongSound() {
+      wrongSound.currentTime = 0;
+      wrongSound.play().catch(function () {
+        message.textContent = "Wrong key. Click Start / Focus once if the sound does not play.";
+        message.className = "message warning";
+      });
+    }
+
+    function showWrongEffect() {
+      targetArea.classList.remove("wrong-flash");
+      void targetArea.offsetWidth;
+      targetArea.classList.add("wrong-flash");
+    }
+
+    function updateStats() {
+      scoreElement.textContent = score;
+      mistakesElement.textContent = mistakes;
+
+      const total = typedCount + mistakes;
+      const accuracy = total === 0 ? 100 : Math.max(0, Math.round((typedCount / total) * 100));
+
+      accuracyElement.textContent = accuracy + "%";
+    }
+
+    function completePhrase() {
+      score += 10;
+      phraseCount += 1;
+      updateStats();
+      message.textContent = "Great! Next phrase!";
+      message.className = "message success";
+
+      setTimeout(function () {
+        choosePhrase();
+      }, 550);
+    }
+
+    function pressKeyVisual(key) {
+      const lowerKey = key.toLowerCase();
+      const keyElement = document.querySelector('.key[data-key="' + CSS.escape(lowerKey) + '"]');
+
+      if (keyElement) {
+        keyElement.classList.add("pressed");
+
+        setTimeout(function () {
+          keyElement.classList.remove("pressed");
+        }, 120);
+      }
+    }
+
+    typingInput.addEventListener("keydown", function (event) {
+      if (event.key === "Shift" || event.key === "CapsLock" || event.key === "Tab" || event.key === "Control" || event.key === "Alt" || event.key === "Meta") {
+        return;
+      }
+
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        choosePhrase();
+        return;
+      }
+
+      if (event.key.length !== 1) {
+        return;
+      }
+
+      event.preventDefault();
+      pressKeyVisual(event.key);
+
+      const expectedCharacter = currentPhrase[currentIndex];
+      const typedCharacter = event.key.toLowerCase();
+
+      if (typedCharacter === expectedCharacter) {
+        currentIndex += 1;
+        typedCount += 1;
+        typingInput.value = currentPhrase.slice(0, currentIndex);
+        message.textContent = "Good!";
+        message.className = "message";
+        renderTarget();
+        updateStats();
+
+        if (currentIndex === currentPhrase.length) {
+          completePhrase();
+        }
+      } else {
+        mistakes += 1;
+        message.textContent = "Wrong key! Try again.";
+        message.className = "message warning";
+        playWrongSound();
+        showWrongEffect();
+        updateStats();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      pressKeyVisual(event.key);
+    });
+
+    startButton.addEventListener("click", function () {
+      typingInput.focus();
+      message.textContent = "Ready. Type the phrase shown above.";
+      message.className = "message";
+    });
+
+    nextButton.addEventListener("click", function () {
+      phraseCount += 1;
+      choosePhrase();
+      typingInput.focus();
+      message.textContent = "New phrase!";
+      message.className = "message";
+    });
+
+    resetButton.addEventListener("click", function () {
+      score = 0;
+      mistakes = 0;
+      typedCount = 0;
+      phraseCount = 1;
+      usedIndexes = [];
+      updateStats();
+      choosePhrase();
+      typingInput.focus();
+      message.textContent = "Score reset. Start typing!";
+      message.className = "message";
+    });
+
+    choosePhrase();
+    updateStats();
+  </script>
+</body>
+</html>
