@@ -389,6 +389,16 @@
       background: rgba(255, 255, 255, 0.028);
     }
 
+    .settings-stack {
+      display: grid;
+      gap: 10px;
+      margin: 1px 0 28px;
+    }
+
+    .settings-stack .settings-row {
+      margin: 0;
+    }
+
     .settings-copy strong,
     .settings-copy small {
       display: block;
@@ -640,6 +650,12 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 24px;
       background: rgba(6, 8, 17, 0.58);
+      cursor: text;
+    }
+
+    .target-area:focus-visible {
+      outline: 3px solid rgba(8, 127, 240, 0.25);
+      outline-offset: 3px;
     }
 
     .target-area::before {
@@ -760,27 +776,51 @@
       cursor: pointer;
     }
 
-    .typing-input {
-      width: 100%;
-      height: 55px;
-      padding: 0 18px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
+    .miss-slot {
+      display: grid;
+      min-height: 48px;
+      place-items: center;
+      margin-top: 4px;
+    }
+
+    .miss-indicator {
+      color: var(--red);
+      font-size: clamp(25px, 4vw, 34px);
+      font-weight: 950;
+      letter-spacing: 0.16em;
+      line-height: 1;
+      opacity: 0;
+      text-shadow: 0 6px 18px rgba(255, 64, 87, 0.25);
+      transform: scale(0.82) translateY(-5px);
+      visibility: hidden;
+    }
+
+    .miss-indicator.show {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      visibility: visible;
+      animation: miss-pop 0.5s ease both;
+    }
+
+    @keyframes miss-pop {
+      0% { opacity: 0; transform: scale(0.72) translateY(-8px); }
+      18% { opacity: 1; transform: scale(1.08) translateY(0); }
+      72% { opacity: 1; transform: scale(1) translateY(0); }
+      100% { opacity: 0; transform: scale(0.96) translateY(3px); }
+    }
+
+    .typing-capture {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      border: 0;
       outline: 0;
-      color: #dfe3ef;
-      background: rgba(255, 255, 255, 0.055);
-      font-family: "SFMono-Regular", Consolas, monospace;
+      opacity: 0;
+      pointer-events: none;
       font-size: 16px;
-      caret-color: var(--cyan);
-    }
-
-    .typing-input:focus {
-      border-color: rgba(85, 230, 255, 0.5);
-      box-shadow: 0 0 0 4px rgba(85, 230, 255, 0.06);
-    }
-
-    .typing-input::placeholder {
-      color: #686e87;
     }
 
     .keyboard-panel {
@@ -893,6 +933,17 @@
       justify-content: space-between;
       gap: 18px;
       margin-top: 14px;
+    }
+
+    .game-footer-actions {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .game-footer .secondary-button {
+      min-height: 40px;
     }
 
     .feedback {
@@ -1224,12 +1275,23 @@
 
       .game-head {
         align-items: flex-start;
+        flex-wrap: wrap;
         margin-bottom: 20px;
       }
 
       .game-head-actions {
-        justify-content: flex-end;
-        flex-wrap: wrap;
+        display: grid;
+        width: 100%;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        justify-content: space-between;
+      }
+
+      .game-head-actions .quiet-button,
+      .game-head-actions .text-size-select {
+        width: 100%;
+        padding-right: 6px;
+        padding-left: 6px;
       }
 
       .game-stat {
@@ -1247,6 +1309,14 @@
 
       .input-row {
         grid-template-columns: 1fr;
+      }
+
+      .game-footer {
+        align-items: flex-start;
+      }
+
+      .game-footer-actions {
+        margin-left: auto;
       }
 
       .keyboard-panel {
@@ -1772,16 +1842,30 @@
               </div>
             </fieldset>
 
-            <div class="settings-row">
-              <div class="settings-copy">
-                <strong>Show live accuracy</strong>
-                <small>Results always include your final accuracy</small>
+            <div class="settings-stack">
+              <div class="settings-row">
+                <div class="settings-copy">
+                  <strong>Show live accuracy</strong>
+                  <small>Results always include your final accuracy</small>
+                </div>
+                <label class="switch">
+                  <input class="switch-input" id="showAccuracyInput" type="checkbox" checked />
+                  <span class="toggle-track" aria-hidden="true"></span>
+                  <span class="sr-only">Show live accuracy</span>
+                </label>
               </div>
-              <label class="switch">
-                <input class="switch-input" id="showAccuracyInput" type="checkbox" checked />
-                <span class="toggle-track" aria-hidden="true"></span>
-                <span class="sr-only">Show live accuracy</span>
-              </label>
+
+              <div class="settings-row">
+                <div class="settings-copy">
+                  <strong>Show on-screen keyboard</strong>
+                  <small>You can also change this during the game</small>
+                </div>
+                <label class="switch">
+                  <input class="switch-input" id="showKeyboardInput" type="checkbox" checked />
+                  <span class="toggle-track" aria-hidden="true"></span>
+                  <span class="sr-only">Show on-screen keyboard</span>
+                </label>
+              </div>
             </div>
 
             <button class="primary-button" type="submit">Start Session</button>
@@ -1803,6 +1887,7 @@
                   <option value="125">125%</option>
                 </select>
               </label>
+              <button class="quiet-button" id="toggleKeyboardButton" type="button" aria-pressed="true">Keyboard On</button>
               <button class="quiet-button" id="endRunButton" type="button">End Run</button>
             </div>
           </div>
@@ -1835,26 +1920,27 @@
             <span class="phrase-number" id="phraseCounter">Phrase 1</span>
           </div>
 
-          <div class="target-area" id="targetArea">
+          <div class="target-area" id="targetArea" tabindex="0" aria-label="Typing text. Start typing, or tap to open the keyboard on mobile.">
             <div class="target-text" id="targetText" aria-live="polite"></div>
           </div>
 
-          <div class="input-row">
-            <input
-              class="typing-input"
-              id="typingInput"
-              type="text"
-              autocomplete="off"
-              autocorrect="off"
-              autocapitalize="off"
-              spellcheck="false"
-              placeholder="Type the highlighted character…"
-              aria-label="Typing input"
-            />
-            <button class="secondary-button" id="skipButton" type="button">Skip</button>
+          <div class="miss-slot" aria-live="assertive" aria-atomic="true">
+            <strong class="miss-indicator" id="missIndicator"></strong>
           </div>
 
-          <div class="keyboard-panel" aria-label="Live on-screen keyboard">
+          <input
+            class="typing-capture"
+            id="typingInput"
+            type="text"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            inputmode="text"
+            aria-label="Hidden typing input"
+          />
+
+          <div class="keyboard-panel" id="keyboardPanel" aria-label="Live on-screen keyboard">
             <div class="keyboard-heading">
               <span>Live keyboard</span>
               <small>Pressed keys light up in TypeBeat colors</small>
@@ -1864,7 +1950,10 @@
 
           <div class="game-footer">
             <p class="feedback" id="feedback" role="status">The clock starts with your first key.</p>
-            <span class="shortcut-hint"><kbd>Esc</kbd> end run · <kbd>Enter</kbd> focus</span>
+            <div class="game-footer-actions">
+              <span class="shortcut-hint">Just type · <kbd>Esc</kbd> end run</span>
+              <button class="secondary-button" id="skipButton" type="button">Skip</button>
+            </div>
           </div>
         </div>
       </section>
@@ -2307,9 +2396,11 @@
         resultScreen: document.getElementById("resultScreen"),
         setupForm: document.getElementById("setupForm"),
         showAccuracyInput: document.getElementById("showAccuracyInput"),
+        showKeyboardInput: document.getElementById("showKeyboardInput"),
         gameCard: document.getElementById("gameCard"),
         modeBadge: document.getElementById("modeBadge"),
         gameTextSize: document.getElementById("gameTextSize"),
+        toggleKeyboardButton: document.getElementById("toggleKeyboardButton"),
         endRunButton: document.getElementById("endRunButton"),
         timeLabel: document.getElementById("timeLabel"),
         timeValue: document.getElementById("timeValue"),
@@ -2322,7 +2413,9 @@
         targetArea: document.getElementById("targetArea"),
         targetText: document.getElementById("targetText"),
         typingInput: document.getElementById("typingInput"),
+        keyboardPanel: document.getElementById("keyboardPanel"),
         screenKeyboard: document.getElementById("screenKeyboard"),
+        missIndicator: document.getElementById("missIndicator"),
         skipButton: document.getElementById("skipButton"),
         feedback: document.getElementById("feedback"),
         resultIcon: document.getElementById("resultIcon"),
@@ -2352,6 +2445,7 @@
           duration: 60,
           mistakeRule: "practice",
           showAccuracy: true,
+          showKeyboard: true,
           textSize: 100
         },
         status: "setup",
@@ -2366,6 +2460,7 @@
         score: 0,
         streak: 0,
         bestStreak: 0,
+        endingRun: false,
         hasStartedTyping: false,
         startTime: 0,
         endTime: 0,
@@ -2384,6 +2479,9 @@
       const keyboardColors = ["#087ff0", "#7538f4", "#ffc000", "#2bd25b"];
       const keyElements = new Map();
       const keyReleaseTimers = new Map();
+      const MISS_DURATION = 500;
+      let missTimerId = null;
+      let delayedFinishId = null;
       const punctuationCodes = new Map([["`", "Backquote"], ["-", "Minus"], ["=", "Equal"], ["[", "BracketLeft"], ["]", "BracketRight"], ["\\", "Backslash"], [";", "Semicolon"], ["'", "Quote"], [",", "Comma"], [".", "Period"], ["/", "Slash"], [" ", "Space"], ["!", "Digit1"], ["@", "Digit2"], ["#", "Digit3"], ["$", "Digit4"], ["%", "Digit5"], ["^", "Digit6"], ["&", "Digit7"], ["*", "Digit8"], ["(", "Digit9"], [")", "Digit0"], ["_", "Minus"], ["+", "Equal"], ["{", "BracketLeft"], ["}", "BracketRight"], ["|", "Backslash"], [":", "Semicolon"], ["\"", "Quote"], ["<", "Comma"], [">", "Period"], ["?", "Slash"]]);
 
       function buildKeyboard() {
@@ -2447,6 +2545,7 @@
           duration: Number(data.get("duration")),
           mistakeRule: String(data.get("mistakeRule")),
           showAccuracy: elements.showAccuracyInput.checked,
+          showKeyboard: elements.showKeyboardInput.checked,
           textSize: Number(data.get("textSize"))
         };
       }
@@ -2461,9 +2560,42 @@
         if (setupOption) setupOption.checked = true;
       }
 
+      function applyKeyboardVisibility(value) {
+        const isVisible = Boolean(value);
+        state.config.showKeyboard = isVisible;
+        elements.keyboardPanel.hidden = !isVisible;
+        elements.showKeyboardInput.checked = isVisible;
+        elements.toggleKeyboardButton.textContent = isVisible ? "Keyboard On" : "Keyboard Off";
+        elements.toggleKeyboardButton.setAttribute("aria-pressed", String(isVisible));
+      }
+
+      function focusTypingCapture() {
+        if (state.status !== "playing" || state.endingRun) return;
+        elements.typingInput.focus({ preventScroll: true });
+      }
+
+      function hideMiss() {
+        window.clearTimeout(missTimerId);
+        missTimerId = null;
+        elements.missIndicator.classList.remove("show");
+        elements.missIndicator.textContent = "";
+      }
+
+      function showMiss() {
+        window.clearTimeout(missTimerId);
+        elements.missIndicator.classList.remove("show");
+        elements.missIndicator.textContent = "MISS";
+        void elements.missIndicator.offsetWidth;
+        elements.missIndicator.classList.add("show");
+        missTimerId = window.setTimeout(hideMiss, MISS_DURATION);
+      }
+
       function resetRun() {
         stopTimer();
         clearPressedKeys();
+        window.clearTimeout(delayedFinishId);
+        delayedFinishId = null;
+        hideMiss();
         Object.assign(state, {
           status: "playing",
           currentPhrase: "",
@@ -2477,6 +2609,7 @@
           score: 0,
           streak: 0,
           bestStreak: 0,
+          endingRun: false,
           hasStartedTyping: false,
           startTime: 0,
           endTime: 0,
@@ -2485,6 +2618,7 @@
 
         elements.gameCard.classList.toggle("accuracy-concealed", !state.config.showAccuracy);
         applyTextSize(state.config.textSize);
+        applyKeyboardVisibility(state.config.showKeyboard);
         const durationText = state.config.duration === 0 ? "Unlimited" : `${state.config.duration} sec`;
         const ruleText = state.config.mistakeRule === "sudden" ? "Sudden Death" : "Keep Going";
         elements.modeBadge.textContent = `${durationText} · ${ruleText}`;
@@ -2494,6 +2628,7 @@
         elements.timeBar.classList.remove("danger");
         elements.timeBar.style.transform = "scaleX(1)";
         elements.typingInput.disabled = false;
+        elements.typingInput.value = "";
         setFeedback("The clock starts with your first key.");
         choosePhrase();
         updateStats();
@@ -2503,7 +2638,7 @@
         readConfig();
         resetRun();
         showScreen(elements.gameScreen);
-        requestAnimationFrame(() => elements.typingInput.focus());
+        requestAnimationFrame(focusTypingCapture);
       }
 
       function startClock() {
@@ -2590,7 +2725,7 @@
       }
 
       function handleCharacter(character) {
-        if (state.status !== "playing" || Array.from(character).length !== 1) return;
+        if (state.status !== "playing" || state.endingRun || Array.from(character).length !== 1) return;
         startClock();
 
         const expected = state.currentCharacters[state.currentIndex];
@@ -2600,7 +2735,7 @@
           state.streak += 1;
           state.bestStreak = Math.max(state.bestStreak, state.streak);
           state.score += 1 + Math.min(4, Math.floor(state.streak / 10));
-          elements.typingInput.value = state.currentCharacters.slice(0, state.currentIndex).join("");
+          elements.typingInput.value = "";
           setFeedback(state.streak > 1 ? `${state.streak} key streak` : "Good start.", "good");
           renderPhrase();
 
@@ -2620,9 +2755,13 @@
         state.score = Math.max(0, state.score - 2);
         playWrongSound();
         flashWrong();
+        showMiss();
 
         if (state.config.mistakeRule === "sudden") {
-          finishRun("mistake");
+          state.endingRun = true;
+          elements.typingInput.disabled = true;
+          setFeedback("MISS — run ending.", "bad");
+          delayedFinishId = window.setTimeout(() => finishRun("mistake"), MISS_DURATION);
         } else {
           setFeedback("Missed it — keep the rhythm.", "bad");
         }
@@ -2671,7 +2810,11 @@
 
       function finishRun(reason) {
         if (state.status !== "playing") return;
+        window.clearTimeout(delayedFinishId);
+        delayedFinishId = null;
+        hideMiss();
         clearPressedKeys();
+        state.endingRun = false;
         state.status = "results";
         state.endTime = state.hasStartedTyping ? performance.now() : 0;
         stopTimer();
@@ -2753,33 +2896,15 @@
         beginSession();
       });
 
-      elements.typingInput.addEventListener("keydown", (event) => {
-        if (event.key === "Backspace") {
-          event.preventDefault();
-          return;
-        }
-
-        if (event.key === "Enter") {
-          event.preventDefault();
-          return;
-        }
-
-        if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-          event.preventDefault();
-          handleCharacter(event.key);
-        }
-      });
-
       elements.typingInput.addEventListener("input", (event) => {
-        if (state.status !== "playing") return;
+        if (state.status !== "playing" || state.endingRun) return;
 
-        const acceptedText = state.currentCharacters.slice(0, state.currentIndex).join("");
         const enteredValue = elements.typingInput.value;
         const insertedText = typeof event.data === "string"
           ? event.data
-          : enteredValue.slice(acceptedText.length);
+          : enteredValue;
 
-        elements.typingInput.value = acceptedText;
+        elements.typingInput.value = "";
 
         if (event.isComposing || String(event.inputType || "").startsWith("delete") || !insertedText) return;
 
@@ -2792,14 +2917,18 @@
 
       elements.skipButton.addEventListener("click", skipPhrase);
       elements.endRunButton.addEventListener("click", () => finishRun("manual"));
+      elements.toggleKeyboardButton.addEventListener("click", () => {
+        applyKeyboardVisibility(!state.config.showKeyboard);
+        focusTypingCapture();
+      });
       elements.gameTextSize.addEventListener("change", (event) => {
         applyTextSize(event.target.value);
-        elements.typingInput.focus();
+        focusTypingCapture();
       });
       elements.playAgainButton.addEventListener("click", () => {
         resetRun();
         showScreen(elements.gameScreen);
-        requestAnimationFrame(() => elements.typingInput.focus());
+        requestAnimationFrame(focusTypingCapture);
       });
       elements.changeModeButton.addEventListener("click", () => {
         state.status = "setup";
@@ -2818,17 +2947,25 @@
       document.addEventListener("keydown", (event) => {
         if (state.status !== "playing") return;
         setKeyboardKey(event.code || codeForCharacter(event.key), true);
+        if (state.endingRun) {
+          event.preventDefault();
+          return;
+        }
         if (event.key === "Escape") {
           event.preventDefault();
           finishRun("manual");
-        } else if (event.key === "Enter" && document.activeElement !== elements.typingInput) {
+        } else if (event.key === "Backspace" || event.key === "Enter") {
           event.preventDefault();
-          elements.typingInput.focus();
+          focusTypingCapture();
+        } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+          event.preventDefault();
+          handleCharacter(event.key);
         }
       });
       document.addEventListener("keyup", (event) => {
         setKeyboardKey(event.code || codeForCharacter(event.key), false);
       });
+      elements.targetArea.addEventListener("click", focusTypingCapture);
       window.addEventListener("blur", clearPressedKeys);
     })();
   </script>
