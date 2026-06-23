@@ -652,16 +652,48 @@
       filter: blur(70px);
     }
 
+    .game-card {
+      --target-font-size: clamp(27px, 4.5vw, 46px);
+      --target-font-size-mobile: 25px;
+    }
+
+    .game-card[data-text-size="50"] {
+      --target-font-size: clamp(13.5px, 2.25vw, 23px);
+      --target-font-size-mobile: 12.5px;
+    }
+
+    .game-card[data-text-size="75"] {
+      --target-font-size: clamp(20.25px, 3.375vw, 34.5px);
+      --target-font-size-mobile: 18.75px;
+    }
+
+    .game-card[data-text-size="125"] {
+      --target-font-size: clamp(33.75px, 5.625vw, 57.5px);
+      --target-font-size-mobile: 31.25px;
+    }
+
     .target-text {
       position: relative;
       max-width: 900px;
       font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-      font-size: clamp(27px, 4.5vw, 46px);
+      font-size: var(--target-font-size);
       font-weight: 760;
       letter-spacing: 0.01em;
       line-height: 1.45;
       text-align: center;
-      word-break: break-word;
+      word-break: normal;
+      overflow-wrap: normal;
+      text-wrap: pretty;
+      hyphens: none;
+    }
+
+    .word-group {
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .space-character {
+      white-space: pre-wrap;
     }
 
     .typed-character {
@@ -685,6 +717,47 @@
       grid-template-columns: 1fr auto;
       gap: 10px;
       margin-top: 15px;
+    }
+
+    .size-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .size-options .option-card {
+      min-height: 66px;
+    }
+
+    .game-head-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .text-size-select {
+      display: flex;
+      height: 38px;
+      align-items: center;
+      gap: 7px;
+      padding: 0 8px 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .text-size-select select {
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+      font: inherit;
+      cursor: pointer;
     }
 
     .typing-input {
@@ -1141,12 +1214,22 @@
         grid-template-columns: 1fr;
       }
 
+      .size-options {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
       .game-card {
         padding: 22px 15px;
       }
 
       .game-head {
+        align-items: flex-start;
         margin-bottom: 20px;
+      }
+
+      .game-head-actions {
+        justify-content: flex-end;
+        flex-wrap: wrap;
       }
 
       .game-stat {
@@ -1159,7 +1242,7 @@
       }
 
       .target-text {
-        font-size: 25px;
+        font-size: var(--target-font-size-mobile);
       }
 
       .input-row {
@@ -1679,6 +1762,16 @@
               </div>
             </fieldset>
 
+            <fieldset>
+              <legend>Text size</legend>
+              <div class="size-options">
+                <label><input class="option-input" type="radio" name="textSize" value="50" /><span class="option-card"><strong>50%</strong><small>Compact</small></span></label>
+                <label><input class="option-input" type="radio" name="textSize" value="75" /><span class="option-card"><strong>75%</strong><small>Small</small></span></label>
+                <label><input class="option-input" type="radio" name="textSize" value="100" checked /><span class="option-card"><strong>100%</strong><small>Standard</small></span></label>
+                <label><input class="option-input" type="radio" name="textSize" value="125" /><span class="option-card"><strong>125%</strong><small>Large</small></span></label>
+              </div>
+            </fieldset>
+
             <div class="settings-row">
               <div class="settings-copy">
                 <strong>Show live accuracy</strong>
@@ -1700,7 +1793,18 @@
         <div class="game-card" id="gameCard">
           <div class="game-head">
             <span class="mode-badge" id="modeBadge">60 sec · Keep Going</span>
-            <button class="quiet-button" id="endRunButton" type="button">End Run</button>
+            <div class="game-head-actions">
+              <label class="text-size-select">
+                <span>Text</span>
+                <select id="gameTextSize" aria-label="Typing text size">
+                  <option value="50">50%</option>
+                  <option value="75">75%</option>
+                  <option value="100" selected>100%</option>
+                  <option value="125">125%</option>
+                </select>
+              </label>
+              <button class="quiet-button" id="endRunButton" type="button">End Run</button>
+            </div>
           </div>
 
           <div class="stat-strip">
@@ -2205,6 +2309,7 @@
         showAccuracyInput: document.getElementById("showAccuracyInput"),
         gameCard: document.getElementById("gameCard"),
         modeBadge: document.getElementById("modeBadge"),
+        gameTextSize: document.getElementById("gameTextSize"),
         endRunButton: document.getElementById("endRunButton"),
         timeLabel: document.getElementById("timeLabel"),
         timeValue: document.getElementById("timeValue"),
@@ -2246,7 +2351,8 @@
         config: {
           duration: 60,
           mistakeRule: "practice",
-          showAccuracy: true
+          showAccuracy: true,
+          textSize: 100
         },
         status: "setup",
         currentPhrase: "",
@@ -2340,8 +2446,19 @@
         state.config = {
           duration: Number(data.get("duration")),
           mistakeRule: String(data.get("mistakeRule")),
-          showAccuracy: elements.showAccuracyInput.checked
+          showAccuracy: elements.showAccuracyInput.checked,
+          textSize: Number(data.get("textSize"))
         };
+      }
+
+      function applyTextSize(value) {
+        const allowedSizes = [50, 75, 100, 125];
+        const size = allowedSizes.includes(Number(value)) ? Number(value) : 100;
+        state.config.textSize = size;
+        elements.gameCard.dataset.textSize = String(size);
+        elements.gameTextSize.value = String(size);
+        const setupOption = elements.setupForm.querySelector(`[name="textSize"][value="${size}"]`);
+        if (setupOption) setupOption.checked = true;
       }
 
       function resetRun() {
@@ -2367,6 +2484,7 @@
         });
 
         elements.gameCard.classList.toggle("accuracy-concealed", !state.config.showAccuracy);
+        applyTextSize(state.config.textSize);
         const durationText = state.config.duration === 0 ? "Unlimited" : `${state.config.duration} sec`;
         const ruleText = state.config.mistakeRule === "sudden" ? "Sudden Death" : "Keep Going";
         elements.modeBadge.textContent = `${durationText} · ${ruleText}`;
@@ -2445,16 +2563,29 @@
 
       function renderPhrase() {
         elements.targetText.replaceChildren();
+        let wordGroup = null;
 
         state.currentCharacters.forEach((character, index) => {
           const span = document.createElement("span");
-          span.textContent = character === " " ? "\u00a0" : character;
-          span.className = index < state.currentIndex
+          span.textContent = character;
+          const progressClass = index < state.currentIndex
             ? "typed-character"
             : index === state.currentIndex
               ? "current-character"
               : "remaining-character";
-          elements.targetText.appendChild(span);
+          span.className = `target-character ${progressClass}${character === " " ? " space-character" : ""}`;
+
+          if (character === " ") {
+            elements.targetText.appendChild(span);
+            wordGroup = null;
+          } else {
+            if (!wordGroup) {
+              wordGroup = document.createElement("span");
+              wordGroup.className = "word-group";
+              elements.targetText.appendChild(wordGroup);
+            }
+            wordGroup.appendChild(span);
+          }
         });
       }
 
@@ -2661,6 +2792,10 @@
 
       elements.skipButton.addEventListener("click", skipPhrase);
       elements.endRunButton.addEventListener("click", () => finishRun("manual"));
+      elements.gameTextSize.addEventListener("change", (event) => {
+        applyTextSize(event.target.value);
+        elements.typingInput.focus();
+      });
       elements.playAgainButton.addEventListener("click", () => {
         resetRun();
         showScreen(elements.gameScreen);
